@@ -1,0 +1,267 @@
+
+
+# curl --data '{"method":"trace_replayBlockTransactions","params":["0x121eaca",["trace"]],"id":1,"jsonrpc":"2.0"}' -H "Content-Type: application/json" -X POST localhost:8545
+POST 127.0.0.1:8545
+Content-Type: application/json
+
+{
+  "method": "trace_replayBlockTransactions",
+  "params": [
+    "0x12A570",
+    [
+      "trace"
+    ]
+  ],
+  "id": 1,
+  "jsonrpc": "2.0"
+}
+
+###
+
+
+###
+
+POST localhost:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "eth_syncing",
+  "params": [],
+  "id": 1
+}
+
+###
+
+POST localhost:8545
+#POST https://goerli.infura.io/v3/e8e57acb3dde4a889e15107e796332aa
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "eth_getBalance",
+  "params": [
+    "0xa6DD2974B96e959F2c8930024451a30aFEC24203",
+    "0x27100"
+  ],
+  "id": 1
+}
+
+###
+# 0x68d39d934c85200
+# 0x68d39d934c85200
+# 0x68d39d934c85200
+
+POST localhost:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "debug_accountRange",
+  "params": [
+    "0x1e8480",
+    "",
+    256,
+    false,
+    false,
+    false
+  ],
+  "id": 1
+}
+
+###
+
+# curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getTransactionByHash", "params": ["0x63bfccae773d89450ae52f0634ff6fe862f6b9ffd0fb7bd9aaa49ae78b0ca0f4"], "id":1}' localhost:8545
+# curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getTransactionByHash", "params": ["0x2afd9cb16967822f7eb9178f01031272fe16ddd0e7665bd82aac9c69dddfc55e"], "id":1}' localhost:8545
+POST localhost:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "eth_getTransactionByHash",
+  "params": [
+    "0x1302cc71b89c1482b18a97a6fa2c9c375f4bf7548122363b6e91528440272fde"
+  ],
+  "id": 1
+}
+
+###
+
+
+
+# curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getTransactionByHash", "params": ["0x1302cc71b89c1482b18a97a6fa2c9c375f4bf7548122363b6e91528440272fde"], "id":1}' localhost:8545
+POST localhost:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "eth_getBlockByNumber",
+  "params": [
+    "0x4C4B40",
+    true
+  ],
+  "id": 1
+}
+
+###
+
+# curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber", "params": ["0x1b4", true], "id":1}' localhost:8545
+POST localhost:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "eth_newHeader",
+  "params": [],
+  "id": 1
+}
+
+###
+
+POST localhost:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "eth_getBlockByNumber",
+  "params": [
+    "0xf4240",
+    true
+  ],
+  "id": 2
+}
+
+###
+
+POST localhost:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "debug_storageRangeAt",
+  "params": [
+    "0x4b8e94adcdca6352858499654606def91bad8978ad70028fd629ba770e76e304",
+    2,
+    "0x33990122638b9132ca29c723bdf037f1a891a70c",
+    "0x0000000000000000000000000000000000000000000000000000000000000000",
+    1024
+  ],
+  "id": 537758
+}
+
+### > 60
+
+### >20
+###{"jsonrpc":"2.0","method":"debug_storageRangeAt","params":["0x6e6ec30ba20b263d1bdf6d87a0b1b037ea595929ac10ad74f6b7e1890fdad744", 19,"0x793ae8c1b1a160bfc07bfb0d04f85eab1a71f4f2","0x0000000000000000000000000000000000000000000000000000000000000000",1024],"id":113911}
+
+
+### {"jsonrpc":"2.0","mesthod":"debug_storageRangeAt","params":["0xbcb55dcb321899291d10818dd06eaaf939ff87a717ac40850b54c6b56e8936ff", 2,"0xca7c390f8f843a8c3036841fde755e5d0acb97da","0x0000000000000000000000000000000000000000000000000000000000000000",1024],"id":3836}
+
+###{"jsonrpc":"2.0","method":"debug_storageRangeAt","params":["0xf212a7655339852bf58f7e1d66f82256d22d13ccba3068a9c47a635738698c84", 0,"0xb278e4cb20dfbf97e78f27001f6b15288302f4d7","0x0000000000000000000000000000000000000000000000000000000000000000",1024],"id":8970}
+
+###
+
+POST 127.0.0.1:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "eth_getTransactionReceipt",
+  "params": [
+    "0xc05ce241bec59900356ede868d170bc01d743c3cd5ecb129ca99596593022771"
+  ],
+  "id": 537758
+}
+
+
+###
+
+#POST 192.168.255.138:8545
+POST localhost:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "erigon_getLogsByHash",
+  "params": [
+    "0x343f85f13356e138152d77287fda5ae0818c514119119ad439f81d69c59fc2f6"
+  ],
+  "id": 537758
+}
+
+
+###
+
+#POST 192.168.255.138:8545
+POST 127.0.0.1:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "eth_getLogs",
+  "params": [
+    {
+      "address": "0xa3e7317e591d5a0f1c605be1b3ac4d2ae56104d6",
+      "topics": [
+        "0x5038a30b900118d4e513ba62ebd647a96726a6f81b8fda73c21e9da45df5423d",
+        "0x0000000000000000000000002a7c311516266934d9acd76cf4ca1035d139adaa"
+      ]
+    }
+  ],
+  "id": 537758
+}
+
+###
+
+POST 127.0.0.1:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "eth_getLogs",
+  "params": [
+    {
+      "fromBlock": "0x14ADC0",
+      "toBlock": "0x14AEC0"
+    }
+  ],
+  "id": 537758
+}
+
+###
+
+#POST 192.168.255.138:8545
+POST localhost:8545
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "debug_storageRangeAt",
+  "params": [
+    "0x4b8e94adcdca6352858499654606def91bad8978ad70028fd629ba770e76e304",
+    1,
+    "0xe8b0a865e4663636bf4d6b159c57333210b0c229",
+    "0x0000000000000000000000000000000000000000000000000000000000000000",
+    1024
+  ],
+  "id": 1377
+}
+
+
+###
+
+POST localhost:8545
+Content-Type: application/json
+
+{
+  "id": 1,
+  "method": "eth_estimateGas",
+  "params": [
+    {
+      "to": "0x5fda30bb72b8dfe20e48a00dfc108d0915be9bb0",
+      "value": "0x1234"
+    },
+    "latest"
+  ]
+}
+
