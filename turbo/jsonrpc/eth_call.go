@@ -246,6 +246,7 @@ func pairWorker(s *APIImpl, results chan<- interface{}, triangular *pairtypes.IT
 		results <- err
 		return
 	}
+	log.Info("编码calldata成功", "calldata", calldata)
 
 	ROI := &ROI{
 		TriangularEntity: *triangular,
