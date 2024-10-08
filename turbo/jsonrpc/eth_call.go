@@ -587,8 +587,9 @@ func (api *APIImpl) CallBatch() (string, error) {
 			args := ethapi2.CallArgs{From: &paircache.From, To: &paircache.To, Data: &bytes}
 			gas, err := api.EstimateGas(context.Background(), &args, &latestNumOrHash, nil)
 			if err != nil {
-				gasTotal = gasTotal + gas
+				api.logger.Error("存在roi的预估gas计算异常", "err", err)
 			}
+			gasTotal = gasTotal + gas
 		}
 		api.logger.Info("计算预估总gas成功", "gasTotal", gasTotal)
 	}
@@ -685,8 +686,9 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 			args := ethapi2.CallArgs{From: &paircache.From, To: &paircache.To, Data: &bytes}
 			gas, err := api.EstimateGas(context.Background(), &args, &latestNumOrHash, nil)
 			if err != nil {
-				gasTotal = gasTotal + gas
+				api.logger.Error("存在roi的预估gas计算异常", "err", err)
 			}
+			gasTotal = gasTotal + gas
 		}
 		api.logger.Info("计算预估总gas成功", "gasTotal", gasTotal)
 	}
