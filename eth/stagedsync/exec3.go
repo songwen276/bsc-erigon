@@ -1130,12 +1130,13 @@ Loop:
 		}
 		lenth := len(triangulars)
 		if lenth > 0 {
-			if lenth <= 5000 {
+			filterLenth := 1000
+			if lenth <= filterLenth {
 				getTimeDiff(b, logger, "获取triangulars="+strconv.Itoa(lenth))
 				paircache.TriangleChannel <- triangulars
 			} else {
-				getTimeDiff(b, logger, "过滤获取triangulars=5000")
-				paircache.TriangleChannel <- selectRandomElements(triangulars, 5000)
+				getTimeDiff(b, logger, "过滤获取triangulars="+strconv.Itoa(filterLenth))
+				paircache.TriangleChannel <- selectRandomElements(triangulars, filterLenth)
 			}
 		}
 	}

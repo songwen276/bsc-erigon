@@ -583,7 +583,8 @@ func (api *APIImpl) CallBatch() (string, error) {
 		// 计算预估总gas
 		var gasTotal hexutil.Uint64
 		for _, filteredROI := range filteredROIs {
-			bytes := hexutility.Bytes(filteredROI.CallData)
+			decodeString, _ := hex.DecodeString(filteredROI.CallData)
+			bytes := hexutility.Bytes(decodeString)
 			args := ethapi2.CallArgs{From: &paircache.From, To: &paircache.To, Data: &bytes}
 			gas, err := api.EstimateGas(context.Background(), &args, &latestNumOrHash, nil)
 			if err != nil {
@@ -682,7 +683,8 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 		// 计算预估总gas
 		var gasTotal hexutil.Uint64
 		for _, filteredROI := range filteredROIs {
-			bytes := hexutility.Bytes(filteredROI.CallData)
+			decodeString, _ := hex.DecodeString(filteredROI.CallData)
+			bytes := hexutility.Bytes(decodeString)
 			args := ethapi2.CallArgs{From: &paircache.From, To: &paircache.To, Data: &bytes}
 			gas, err := api.EstimateGas(context.Background(), &args, &latestNumOrHash, nil)
 			if err != nil {
