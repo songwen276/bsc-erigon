@@ -579,6 +579,18 @@ func (api *APIImpl) CallBatch() (string, error) {
 			uniquePairs[roi.TriangularEntity.Pair2] = true
 		}
 		api.logger.Info("排序去重获rois成功", "filteredROIs", filteredROIs)
+
+		// 计算预估总gas
+		var gasTotal hexutil.Uint64
+		for _, filteredROI := range filteredROIs {
+			bytes := hexutility.Bytes(filteredROI.CallData)
+			args := ethapi2.CallArgs{From: &paircache.From, To: &paircache.To, Data: &bytes}
+			gas, err := api.EstimateGas(context.Background(), &args, &latestNumOrHash, nil)
+			if err != nil {
+				gasTotal = gasTotal + gas
+			}
+		}
+		api.logger.Info("计算预估总gas成功", "gasTotal", gasTotal)
 	}
 
 	totalSince := time.Since(start)
@@ -665,6 +677,18 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 			uniquePairs[roi.TriangularEntity.Pair2] = true
 		}
 		api.logger.Info("排序去重获rois成功", "filteredROIs", filteredROIs)
+
+		// 计算预估总gas
+		var gasTotal hexutil.Uint64
+		for _, filteredROI := range filteredROIs {
+			bytes := hexutility.Bytes(filteredROI.CallData)
+			args := ethapi2.CallArgs{From: &paircache.From, To: &paircache.To, Data: &bytes}
+			gas, err := api.EstimateGas(context.Background(), &args, &latestNumOrHash, nil)
+			if err != nil {
+				gasTotal = gasTotal + gas
+			}
+		}
+		api.logger.Info("计算预估总gas成功", "gasTotal", gasTotal)
 	}
 
 	totalSince := time.Since(start)
