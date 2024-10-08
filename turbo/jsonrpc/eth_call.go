@@ -152,7 +152,9 @@ func workerTest(s *APIImpl, results chan<- interface{}, triangular *pairtypes.IT
 		results <- err
 		return
 	}
+
 	log.Info("编码calldata成功", "calldata", calldata)
+
 	ROI := &ROI{
 		TriangularEntity: *triangular,
 		CallData:         calldata,
@@ -245,7 +247,7 @@ func pairWorker(s *APIImpl, results chan<- interface{}, triangular *pairtypes.IT
 		results <- err
 		return
 	}
-	log.Info("编码calldata成功", "calldata", calldata)
+
 	ROI := &ROI{
 		TriangularEntity: *triangular,
 		CallData:         calldata,
@@ -313,7 +315,7 @@ func getRoisTest(s *APIImpl, triangular *pairtypes.ITriangularArbitrageTriangula
 		rois := make([]*big.Int, lenth-2)
 		for j := 0; j < lenth; j++ {
 			subStr := roiStr[64*j : 64*(j+1)]
-			log.Info("CallReturn EncodeToString", "roiStr", subStr)
+			log.Info("eth_call方法返回值[]byte类型分片转为hexString类型", "roiStr", subStr)
 			if j > 1 {
 				roi, _ := new(big.Int).SetString(subStr, 16)
 				rois[j-2] = roi
@@ -373,7 +375,7 @@ func EncodePackedBsc(values []interface{}) (string, error) {
 			addrStr := v.Hex()[2:]
 			encoded = encoded + addrStr
 		default:
-			return "", fmt.Errorf("unsupported type: %T", value)
+			return "", fmt.Errorf("不支持该类型编码 type: %T", value)
 		}
 	}
 	return encoded, nil
@@ -536,7 +538,7 @@ func (api *APIImpl) CallBatch() (string, error) {
 	api.logger.Info("所有eth_call查询任务执行完成花费时长", "runtime", selectSince)
 
 	// 读取任务结果通道数据进行处理
-	rois := make([]ROI, 5000)
+	rois := make([]ROI, 0, 5000)
 	resultMap := make(map[string]interface{}, len(triangulars))
 	i := 1
 	// 处理结果
@@ -621,7 +623,7 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 	api.logger.Info("所有eth_call查询任务执行完成花费时长", "runtime", selectSince)
 
 	// 读取任务结果通道数据进行处理
-	rois := make([]ROI, 5000)
+	rois := make([]ROI, 0, 5000)
 	resultMap := make(map[string]interface{}, len(triangulars))
 	i := 1
 	// 处理结果
@@ -629,7 +631,6 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 		itoa := strconv.Itoa(i)
 		switch v := result.(type) {
 		case *ROI:
-			api.logger.Info("获取roi成功", "roi", *v)
 			rois = append(rois, *v)
 		case error:
 			resultMap[itoa] = v.Error()
@@ -641,11 +642,11 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 
 	if len(rois) > 0 {
 		// 按 Profit 字段对rois进行降序排序
-		api.logger.Info("降序排序前的rois", "降序排序前rois", rois)
+		api.logger.Info("排序前的rois", "rois", rois)
 		sort.Slice(rois, func(i, j int) bool {
 			return rois[i].Profit.Cmp(&rois[j].Profit) > 0
 		})
-		api.logger.Info("降序排序生成rois成功", "rois", rois)
+		api.logger.Info("降序排序rois成功", "rois", rois)
 
 		// 将排序后的rois去重过滤，保证每个pair只能出现一次，重复时将Profit较小的ROI都删除，只保留Profit最大的ROI
 		// 去重，保证 Pair0, Pair1, Pair2 中的值只出现一次
