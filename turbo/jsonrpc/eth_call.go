@@ -153,7 +153,7 @@ func workerTest(s *APIImpl, results chan<- interface{}, triangular *pairtypes.IT
 		results <- err
 		return
 	}
-
+	log.Info("编码calldata成功", "calldata", calldata)
 	ROI := &ROI{
 		TriangularEntity: *triangular,
 		CallData:         calldata,
@@ -641,6 +641,7 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 
 	if len(rois) > 0 {
 		// 按 Profit 字段对rois进行降序排序
+		api.logger.Info("降序排序前的rois", "降序排序前rois", rois)
 		sort.Slice(rois, func(i, j int) bool {
 			return rois[i].Profit.Cmp(&rois[j].Profit) > 0
 		})

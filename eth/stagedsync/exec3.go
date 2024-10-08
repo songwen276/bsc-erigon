@@ -773,6 +773,13 @@ Loop:
 
 		rules := chainConfig.Rules(blockNum, b.Time())
 		var receipts types.Receipts
+
+		// 获取pairCache，初始化pairAddrMap
+		pairCache := paircache.GetPairControl()
+		// logger.Info("获取pairCache成功", "triange总数", pairCache.TriangleMap.Count(), "pair总数", pairCache.PairTriangleMap.Count())
+		pairAddrMap := make(map[string]*pairtypes.Set)
+		pairOccurTimes := 0
+
 		// During the first block execution, we may have half-block data in the snapshots.
 		// Thus, we need to skip the first txs in the block, however, this causes the GasUsed to be incorrect.
 		// So we skip that check for the first block, if we find half-executed data.
@@ -893,6 +900,35 @@ Loop:
 						}
 					}
 					usedGas, blobGasUsed = 0, 0
+
+					// 统计当前区块计算验证完所有获取receipts后的时间，再根据receipts交易收据获取pair及其对应的trangleid集合
+					getTimeDiff(b, logger, "获取receipts")
+					for _, receipt := range receipts {
+						for _, reLog := range receipt.Logs {
+							// marshalLog, _ := json.Marshal(reLog)
+							// log.Info("收据日志打印，", "logBlockNum", reLog.BlockNumber, "区块对应的收据receipt.Logs", marshalLog)
+							topics := reLog.Topics
+							if len(topics) > 0 {
+								topic0Str := "0x" + hex.EncodeToString(topics[0][:])
+								topicOper := pairCache.TopicMap[topic0Str]
+								if topicOper != "" {
+									var address string
+									if topicOper == "Balancer" {
+										address = "0x" + hex.EncodeToString(topics[1][0:20])
+									} else {
+										address = "0x" + hex.EncodeToString(reLog.Address[:])
+									}
+									pairOccurTimes++
+									address = common.HexToAddress(address).Hex()
+									pairAddrMap[address] = pairCache.GetPairSet(address)
+									// logger.Info("交易收据日志打印，", "logBlockNum", reLog.BlockNumber, "Log.Index", reLog.Index, "topic", topic0Str, "topicOper", topicOper, "address", address)
+								}
+							}
+						}
+					}
+					// logger.Info("pair统计信息，", "logBlockNum", blockNum, "pairAddrNum", len(pairAddrMap), "addrOccurTimes", pairOccurTimes, "pairMap", pairAddrMap)
+					logger.Info("pair统计信息，", "logBlockNum", blockNum, "pairAddrNum", len(pairAddrMap), "addrOccurTimes", pairOccurTimes)
+
 					receipts = receipts[:0]
 				} else if txTask.TxIndex >= 0 {
 					receipts = append(receipts, txTask.CreateReceipt(usedGas))
@@ -1072,39 +1108,7 @@ Loop:
 		default:
 		}
 
-		// 根据receipts获取pair
-		getTimeDiff(b, logger, "获取receipts")
-		pairCache := paircache.GetPairControl()
-		// logger.Info("获取pairCache成功", "triange总数", pairCache.TriangleMap.Count(), "pair总数", pairCache.PairTriangleMap.Count())
-		pairAddrMap := make(map[string]*pairtypes.Set)
-		pairOccurTimes := 0
-		for _, receipt := range receipts {
-			for _, reLog := range receipt.Logs {
-				// marshalLog, _ := json.Marshal(reLog)
-				// log.Info("收据日志打印，", "logBlockNum", reLog.BlockNumber, "区块对应的收据receipt.Logs", marshalLog)
-				topics := reLog.Topics
-				if len(topics) > 0 {
-					topic0Str := "0x" + hex.EncodeToString(topics[0][:])
-					topicOper := pairCache.TopicMap[topic0Str]
-					if topicOper != "" {
-						var address string
-						if topicOper == "Balancer" {
-							address = "0x" + hex.EncodeToString(topics[1][0:20])
-						} else {
-							address = "0x" + hex.EncodeToString(reLog.Address[:])
-						}
-						pairOccurTimes++
-						address = common.HexToAddress(address).Hex()
-						pairAddrMap[address] = pairCache.GetPairSet(address)
-						// logger.Info("交易收据日志打印，", "logBlockNum", reLog.BlockNumber, "Log.Index", reLog.Index, "topic", topic0Str, "topicOper", topicOper, "address", address)
-					}
-				}
-			}
-		}
-		// logger.Info("pair统计信息，", "logBlockNum", blockNum, "pairAddrNum", len(pairAddrMap), "addrOccurTimes", pairOccurTimes, "pairMap", pairAddrMap)
-		logger.Info("pair统计信息，", "logBlockNum", blockNum, "pairAddrNum", len(pairAddrMap), "addrOccurTimes", pairOccurTimes)
-
-		// 根据pair获取triangle
+		// 当前区块处理完成后，根据pair获取triangle
 		var triangulars []*pairtypes.ITriangularArbitrageTriangular
 		for _, triangleIdSet := range pairAddrMap {
 			for _, triangleId := range triangleIdSet.GetData().Keys() {
