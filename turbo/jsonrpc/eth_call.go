@@ -26,7 +26,6 @@ import (
 	"github.com/erigontech/erigon/paircache"
 	"github.com/erigontech/erigon/paircache/gopool"
 	"github.com/erigontech/erigon/paircache/pairtypes"
-	"github.com/ethereum/go-ethereum/common"
 	solsha3 "github.com/miguelmota/go-solidity-sha3"
 	"math/big"
 	"os"
@@ -131,11 +130,11 @@ func workerTest(s *APIImpl, results chan<- interface{}, triangular *pairtypes.IT
 	parameters := []interface{}{
 		hex.EncodeToString(solsha3.Uint32(big.NewInt(0))),
 		subHex,
-		common.BigToAddress(rois[0]),
+		libcommon.BigToAddress(rois[0]),
 		getWei(rois[6], 96),
-		common.BigToAddress(rois[1]),
+		libcommon.BigToAddress(rois[1]),
 		getWei(rois[7], 96),
-		common.BigToAddress(rois[2]),
+		libcommon.BigToAddress(rois[2]),
 		getWei(rois[10], 96),
 		triangular.Token0,
 		getWei(rois[11], 96),
@@ -224,11 +223,11 @@ func pairWorker(s *APIImpl, results chan<- interface{}, triangular *pairtypes.IT
 	parameters := []interface{}{
 		hex.EncodeToString(solsha3.Uint32(big.NewInt(0))),
 		subHex,
-		common.BigToAddress(rois[0]),
+		libcommon.BigToAddress(rois[0]),
 		getWei(rois[6], 96),
-		common.BigToAddress(rois[1]),
+		libcommon.BigToAddress(rois[1]),
 		getWei(rois[7], 96),
-		common.BigToAddress(rois[2]),
+		libcommon.BigToAddress(rois[2]),
 		getWei(rois[10], 96),
 		triangular.Token0,
 		getWei(rois[11], 96),
@@ -247,7 +246,6 @@ func pairWorker(s *APIImpl, results chan<- interface{}, triangular *pairtypes.IT
 		return
 	}
 	log.Info("编码calldata成功", "calldata", calldata)
-
 	ROI := &ROI{
 		TriangularEntity: *triangular,
 		CallData:         calldata,
@@ -371,7 +369,7 @@ func EncodePackedBsc(values []interface{}) (string, error) {
 		case *Wei:
 			wei := *v
 			encoded = encoded + wei.Data[len(wei.Data)-wei.BitSize/4:]
-		case common.Address:
+		case libcommon.Address:
 			addrStr := v.Hex()[2:]
 			encoded = encoded + addrStr
 		default:
@@ -631,6 +629,7 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 		itoa := strconv.Itoa(i)
 		switch v := result.(type) {
 		case *ROI:
+			api.logger.Info("获取roi成功", "roi", *v)
 			rois = append(rois, *v)
 		case error:
 			resultMap[itoa] = v.Error()
