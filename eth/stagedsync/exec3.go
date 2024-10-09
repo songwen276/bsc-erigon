@@ -1110,21 +1110,26 @@ Loop:
 
 		// 当前区块处理完成后，根据pair获取triangle
 		var triangulars []*pairtypes.ITriangularArbitrageTriangular
+		// 一个pair对应一组triangleId，多个pair又可能对应同一个triangleId，所以循环每组triangleId去重
+		filterMap := make(map[string]struct{})
 		for _, triangleIdSet := range pairAddrMap {
 			for _, triangleId := range triangleIdSet.GetData().Keys() {
-				if triangle, exists := pairCache.GetTriangle(triangleId); exists {
-					triangular := &pairtypes.ITriangularArbitrageTriangular{
-						Token0:  common.HexToAddress(triangle.Token0),
-						Router0: common.HexToAddress(triangle.Router0),
-						Pair0:   common.HexToAddress(triangle.Pair0),
-						Token1:  common.HexToAddress(triangle.Token1),
-						Router1: common.HexToAddress(triangle.Router1),
-						Pair1:   common.HexToAddress(triangle.Pair1),
-						Token2:  common.HexToAddress(triangle.Token2),
-						Router2: common.HexToAddress(triangle.Router2),
-						Pair2:   common.HexToAddress(triangle.Pair2),
+				if _, filter := filterMap[triangleId]; !filter {
+					if triangle, exists := pairCache.GetTriangle(triangleId); exists {
+						triangular := &pairtypes.ITriangularArbitrageTriangular{
+							Token0:  common.HexToAddress(triangle.Token0),
+							Router0: common.HexToAddress(triangle.Router0),
+							Pair0:   common.HexToAddress(triangle.Pair0),
+							Token1:  common.HexToAddress(triangle.Token1),
+							Router1: common.HexToAddress(triangle.Router1),
+							Pair1:   common.HexToAddress(triangle.Pair1),
+							Token2:  common.HexToAddress(triangle.Token2),
+							Router2: common.HexToAddress(triangle.Router2),
+							Pair2:   common.HexToAddress(triangle.Pair2),
+						}
+						triangulars = append(triangulars, triangular)
+						filterMap[triangleId] = struct{}{}
 					}
-					triangulars = append(triangulars, triangular)
 				}
 			}
 		}
