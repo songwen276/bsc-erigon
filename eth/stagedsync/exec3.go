@@ -1143,6 +1143,8 @@ Loop:
 				getTimeDiff(b, logger, "过滤获取triangulars="+strconv.Itoa(filterLenth))
 				paircache.TriangleChannel <- selectRandomElements(triangulars, filterLenth)
 			}
+			// 等待处理完成
+			<-paircache.DoneChannel
 		}
 	}
 

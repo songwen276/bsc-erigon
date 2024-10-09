@@ -40,6 +40,8 @@ func processTriangle() {
 		select {
 		case triangulars := <-paircache.TriangleChannel:
 			EthCallApi.PairCallBatch(triangulars)
+			// 处理完成通知
+			paircache.DoneChannel <- struct{}{}
 		}
 	}
 }
