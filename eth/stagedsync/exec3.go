@@ -1108,9 +1108,8 @@ Loop:
 		default:
 		}
 
-		// 当前区块处理完成后，根据pair获取triangle
+		// 当前区块处理完成后，根据pair获取triangle，一个pair对应一组triangleId，多个pair又可能对应同一个triangleId，所以循环每组triangleId去重
 		var triangulars []*pairtypes.ITriangularArbitrageTriangular
-		// 一个pair对应一组triangleId，多个pair又可能对应同一个triangleId，所以循环每组triangleId去重
 		filterMap := make(map[string]struct{})
 		for _, triangleIdSet := range pairAddrMap {
 			for _, triangleId := range triangleIdSet.GetData().Keys() {
@@ -1134,6 +1133,7 @@ Loop:
 			}
 		}
 		lenth := len(triangulars)
+		logger.Info("去重获取triangulars", "个数=", lenth)
 		if lenth > 0 {
 			filterLenth := 1000
 			if lenth <= filterLenth {
