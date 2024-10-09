@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	TriangleChannel     = make(chan []*pairtypes.ITriangularArbitrageTriangular)
+	TriangleChannel     = make(chan []pairtypes.Triangle)
 	DoneChannel         = make(chan struct{})
 	stateObjectCacheMap = cmap.New()
 	storageCacheMap     = cmap.New()

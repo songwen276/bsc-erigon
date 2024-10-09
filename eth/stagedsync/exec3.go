@@ -1109,39 +1109,28 @@ Loop:
 		}
 
 		// 当前区块处理完成后，根据pair获取triangle，一个pair对应一组triangleId，多个pair又可能对应同一个triangleId，所以循环每组triangleId去重
-		var triangulars []*pairtypes.ITriangularArbitrageTriangular
+		var triangles []pairtypes.Triangle
 		filterMap := make(map[string]struct{})
 		for _, triangleIdSet := range pairAddrMap {
 			for _, triangleId := range triangleIdSet.GetData().Keys() {
 				if _, filter := filterMap[triangleId]; !filter {
 					if triangle, exists := pairCache.GetTriangle(triangleId); exists {
-						triangular := &pairtypes.ITriangularArbitrageTriangular{
-							Token0:  common.HexToAddress(triangle.Token0),
-							Router0: common.HexToAddress(triangle.Router0),
-							Pair0:   common.HexToAddress(triangle.Pair0),
-							Token1:  common.HexToAddress(triangle.Token1),
-							Router1: common.HexToAddress(triangle.Router1),
-							Pair1:   common.HexToAddress(triangle.Pair1),
-							Token2:  common.HexToAddress(triangle.Token2),
-							Router2: common.HexToAddress(triangle.Router2),
-							Pair2:   common.HexToAddress(triangle.Pair2),
-						}
-						triangulars = append(triangulars, triangular)
+						triangles = append(triangles, triangle)
 						filterMap[triangleId] = struct{}{}
 					}
 				}
 			}
 		}
-		lenth := len(triangulars)
-		logger.Info("去重获取triangulars", "个数=", lenth)
+		lenth := len(triangles)
+		logger.Info("去重获取triangles", "个数", lenth)
 		if lenth > 0 {
 			filterLenth := 1000
 			if lenth <= filterLenth {
-				getTimeDiff(b, logger, "获取triangulars="+strconv.Itoa(lenth))
-				paircache.TriangleChannel <- triangulars
+				getTimeDiff(b, logger, "获取triangles="+strconv.Itoa(lenth))
+				paircache.TriangleChannel <- triangles
 			} else {
-				getTimeDiff(b, logger, "过滤获取triangulars="+strconv.Itoa(filterLenth))
-				paircache.TriangleChannel <- selectRandomElements(triangulars, filterLenth)
+				getTimeDiff(b, logger, "过滤获取triangles="+strconv.Itoa(filterLenth))
+				paircache.TriangleChannel <- selectRandomElements(triangles, filterLenth)
 			}
 			// 等待处理完成
 			<-paircache.DoneChannel
@@ -1190,9 +1179,9 @@ func getTimeDiff(block *types.Block, logger log.Logger, desc string) {
 	logger.Info(desc, "时间间隔ms", timeDiff.Milliseconds())
 }
 
-func selectRandomElements(slice []*pairtypes.ITriangularArbitrageTriangular, count int) []*pairtypes.ITriangularArbitrageTriangular {
+func selectRandomElements(slice []pairtypes.Triangle, count int) []pairtypes.Triangle {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	selected := make([]*pairtypes.ITriangularArbitrageTriangular, count)
+	selected := make([]pairtypes.Triangle, count)
 	for i := 0; i < count; i++ {
 		selected[i] = slice[r.Intn(len(slice))]
 	}

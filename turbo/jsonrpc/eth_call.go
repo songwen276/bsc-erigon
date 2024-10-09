@@ -506,32 +506,43 @@ func GetEthCallData() ([]ethapi2.CallArgs, error) {
 func (api *APIImpl) CallBatch() (string, error) {
 	// 读取任务测试数据
 	api.logger.Info("开始执行CallBatch")
-	var triangulars []*pairtypes.ITriangularArbitrageTriangular
-	oriTriangular := &pairtypes.ITriangularArbitrageTriangular{
-		Token0:  libcommon.HexToAddress("0x0bc89aa98Ad94E6798Ec822d0814d934cCD0c0cE"),
-		Router0: libcommon.HexToAddress("0x10ED43C718714eb63d5aA57B78B54704E256024E"),
-		Pair0:   libcommon.HexToAddress("0x51C5251BF281C6d0eF8ced7a1741FdB68D130ac2"),
-		Token1:  libcommon.HexToAddress("0x55d398326f99059fF775485246999027B3197955"),
-		Router1: libcommon.HexToAddress("0x10ED43C718714eb63d5aA57B78B54704E256024E"),
-		Pair1:   libcommon.HexToAddress("0x7EFaEf62fDdCCa950418312c6C91Aef321375A00"),
-		Token2:  libcommon.HexToAddress("0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"),
-		Router2: libcommon.HexToAddress("0x10ED43C718714eb63d5aA57B78B54704E256024E"),
-		Pair2:   libcommon.HexToAddress("0xEE90C67C9dD5dE862F4eabFDd53007a2D95Df5c6"),
+	var triangles []pairtypes.Triangle
+	oriTriangle := pairtypes.Triangle{
+		ID:      1,
+		Token0:  "0x0bc89aa98Ad94E6798Ec822d0814d934cCD0c0cE",
+		Router0: "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+		Pair0:   "0x51C5251BF281C6d0eF8ced7a1741FdB68D130ac2",
+		Token1:  "0x55d398326f99059fF775485246999027B3197955",
+		Router1: "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+		Pair1:   "0x7EFaEf62fDdCCa950418312c6C91Aef321375A00",
+		Token2:  "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
+		Router2: "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+		Pair2:   "0xEE90C67C9dD5dE862F4eabFDd53007a2D95Df5c6",
 	}
-	triangulars = append(triangulars, oriTriangular)
+	triangles = append(triangles, oriTriangle)
 
 	// 初始化构造当前区块公共数据
 	start := time.Now()
-	results := make(chan interface{}, len(triangulars))
+	results := make(chan interface{}, len(triangles))
 
 	// 提交任务到协程池，所有协程完成后关闭结果读取通道
 	var wg sync.WaitGroup
-	for _, triangular := range triangulars {
+	for _, triangle := range triangles {
 		wg.Add(1)
-		currentTriangular := *triangular
+		triangular := &pairtypes.ITriangularArbitrageTriangular{
+			Token0:  libcommon.HexToAddress(triangle.Token0),
+			Router0: libcommon.HexToAddress(triangle.Router0),
+			Pair0:   libcommon.HexToAddress(triangle.Pair0),
+			Token1:  libcommon.HexToAddress(triangle.Token1),
+			Router1: libcommon.HexToAddress(triangle.Router1),
+			Pair1:   libcommon.HexToAddress(triangle.Pair1),
+			Token2:  libcommon.HexToAddress(triangle.Token2),
+			Router2: libcommon.HexToAddress(triangle.Router2),
+			Pair2:   libcommon.HexToAddress(triangle.Pair2),
+		}
 		gopool.Submit(func() {
 			defer wg.Done()
-			workerTest(api, results, &currentTriangular)
+			workerTest(api, results, triangular)
 		})
 	}
 	wg.Wait()
@@ -541,7 +552,7 @@ func (api *APIImpl) CallBatch() (string, error) {
 
 	// 读取任务结果通道数据进行处理
 	rois := make([]ROI, 0, 5000)
-	resultMap := make(map[string]interface{}, len(triangulars))
+	resultMap := make(map[string]interface{}, len(triangles))
 	i := 1
 	// 处理结果
 	for result := range results {
@@ -618,20 +629,30 @@ func (api *APIImpl) CallBatch() (string, error) {
 }
 
 // PairCallBatch executes Call
-func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageTriangular) {
+func (api *APIImpl) PairCallBatch(triangles []pairtypes.Triangle) {
 	// 初始化构造当前区块公共数据
 	start := time.Now()
 	api.logger.Info("开始执行PairCallBatch")
-	results := make(chan interface{}, len(triangulars))
+	results := make(chan interface{}, len(triangles))
 
 	// 提交任务到协程池，所有协程完成后关闭结果读取通道
 	var wg sync.WaitGroup
-	for _, triangular := range triangulars {
+	for _, triangle := range triangles {
 		wg.Add(1)
-		currentTriangular := *triangular
+		triangular := &pairtypes.ITriangularArbitrageTriangular{
+			Token0:  libcommon.HexToAddress(triangle.Token0),
+			Router0: libcommon.HexToAddress(triangle.Router0),
+			Pair0:   libcommon.HexToAddress(triangle.Pair0),
+			Token1:  libcommon.HexToAddress(triangle.Token1),
+			Router1: libcommon.HexToAddress(triangle.Router1),
+			Pair1:   libcommon.HexToAddress(triangle.Pair1),
+			Token2:  libcommon.HexToAddress(triangle.Token2),
+			Router2: libcommon.HexToAddress(triangle.Router2),
+			Pair2:   libcommon.HexToAddress(triangle.Pair2),
+		}
 		gopool.Submit(func() {
 			defer wg.Done()
-			pairWorker(api, results, &currentTriangular)
+			pairWorker(api, results, triangular)
 		})
 	}
 	wg.Wait()
@@ -641,7 +662,7 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 
 	// 读取任务结果通道数据进行处理
 	rois := make([]ROI, 0, 5000)
-	resultMap := make(map[string]interface{}, len(triangulars))
+	resultMap := make(map[string]interface{}, len(triangles))
 	i := 1
 	// 处理结果
 	for result := range results {
@@ -657,13 +678,14 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 		i += 1
 	}
 
-	if len(rois) > 0 {
+	roiLen := len(rois)
+	if roiLen > 0 {
 		// 按 Profit 字段对rois进行降序排序
-		api.logger.Info("排序前的rois", "rois", rois)
+		api.logger.Info("排序前的rois", "个数", roiLen, "rois", rois)
 		sort.Slice(rois, func(i, j int) bool {
 			return rois[i].Profit.Cmp(&rois[j].Profit) > 0
 		})
-		api.logger.Info("降序排序rois成功", "rois", rois)
+		api.logger.Info("降序排序rois成功", "个数", roiLen, "rois", rois)
 
 		// 将排序后的rois去重过滤，保证每个pair只能出现一次，重复时将Profit较小的ROI都删除，只保留Profit最大的ROI
 		// 去重，保证 Pair0, Pair1, Pair2 中的值只出现一次
@@ -681,7 +703,7 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 			uniquePairs[roi.TriangularEntity.Pair1] = true
 			uniquePairs[roi.TriangularEntity.Pair2] = true
 		}
-		api.logger.Info("排序去重获rois成功", "filteredROIs", filteredROIs)
+		api.logger.Info("排序去重获rois成功", "个数", len(filteredROIs), "filteredROIs", filteredROIs)
 
 		// 计算预估总gas
 		var gasTotal hexutil.Uint64
