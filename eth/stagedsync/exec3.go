@@ -1110,19 +1110,24 @@ Loop:
 
 		// 当前区块处理完成后，根据pair获取triangle，一个pair对应一组triangleId，多个pair又可能对应同一个triangleId，所以循环每组triangleId去重
 		var triangles []pairtypes.Triangle
-		filterMap := make(map[string]struct{})
+		filterMap := make(map[string]bool)
 		for _, triangleIdSet := range pairAddrMap {
 			for _, triangleId := range triangleIdSet.GetData().Keys() {
-				if _, filter := filterMap[triangleId]; !filter {
-					if triangle, exists := pairCache.GetTriangle(triangleId); exists {
-						triangles = append(triangles, triangle)
-						filterMap[triangleId] = struct{}{}
+				if filterMap[triangleId] {
+					continue
+				}
+				if triangle, exists := pairCache.GetTriangle(triangleId); exists {
+					triangles = append(triangles, triangle)
+					filterMap[triangleId] = true
+					if triangleId != strconv.FormatInt(triangle.ID, 10) {
+						logger.Info("triangleId和triangle.ID比较", "不相同")
 					}
 				}
 			}
 		}
 		lenth := len(triangles)
-		logger.Info("去重获取triangles", "个数", lenth)
+		lenthfilter := len(filterMap)
+		logger.Info("去重获取triangles", "triangles个数", lenth, "去重获取triangleId个数", lenthfilter)
 		if lenth > 0 {
 			filterLenth := 1000
 			if lenth <= filterLenth {
