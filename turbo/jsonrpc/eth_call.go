@@ -65,9 +65,21 @@ import (
 
 var latestNumOrHash = rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber)
 
-func workerTest(s *APIImpl, results chan<- interface{}, triangular *pairtypes.ITriangularArbitrageTriangular) {
-	// 设置上下文，用于控制每个任务方法执行超时时间
+func workerTest(s *APIImpl, results chan<- interface{}, triangle *pairtypes.Triangle) {
+	// 设置上下文，用于控制每个任务方法执行超时时间，构造triangular
 	ctx := context.Background()
+	triangular := &pairtypes.ITriangularArbitrageTriangular{
+		Token0:  libcommon.HexToAddress(triangle.Token0),
+		Router0: libcommon.HexToAddress(triangle.Router0),
+		Pair0:   libcommon.HexToAddress(triangle.Pair0),
+		Token1:  libcommon.HexToAddress(triangle.Token1),
+		Router1: libcommon.HexToAddress(triangle.Router1),
+		Pair1:   libcommon.HexToAddress(triangle.Pair1),
+		Token2:  libcommon.HexToAddress(triangle.Token2),
+		Router2: libcommon.HexToAddress(triangle.Router2),
+		Pair2:   libcommon.HexToAddress(triangle.Pair2),
+	}
+
 	param := getArbitrageQueryParam(big.NewInt(0), 0, 10000)
 	rois, err := getRoisTest(s, triangular, param, ctx)
 	log.Info("10000step", "start", param.Start, "end", param.End, "step", param.Pieces, "rois", rois)
@@ -156,18 +168,30 @@ func workerTest(s *APIImpl, results chan<- interface{}, triangular *pairtypes.IT
 	log.Info("编码calldata成功", "calldata", calldata)
 
 	ROI := &ROI{
-		TriangularEntity: *triangular,
-		CallData:         calldata,
-		Profit:           *rois[13],
+		Triangle: *triangle,
+		CallData: calldata,
+		Profit:   *rois[13],
 	}
 
 	results <- ROI
 	return
 }
 
-func pairWorker(s *APIImpl, results chan<- interface{}, triangular *pairtypes.ITriangularArbitrageTriangular) {
-	// 设置上下文，用于控制每个任务方法执行超时时间
+func pairWorker(s *APIImpl, results chan<- interface{}, triangle *pairtypes.Triangle) {
+	// 设置上下文，用于控制每个任务方法执行超时时间，构造triangular
 	ctx := context.Background()
+	triangular := &pairtypes.ITriangularArbitrageTriangular{
+		Token0:  libcommon.HexToAddress(triangle.Token0),
+		Router0: libcommon.HexToAddress(triangle.Router0),
+		Pair0:   libcommon.HexToAddress(triangle.Pair0),
+		Token1:  libcommon.HexToAddress(triangle.Token1),
+		Router1: libcommon.HexToAddress(triangle.Router1),
+		Pair1:   libcommon.HexToAddress(triangle.Pair1),
+		Token2:  libcommon.HexToAddress(triangle.Token2),
+		Router2: libcommon.HexToAddress(triangle.Router2),
+		Pair2:   libcommon.HexToAddress(triangle.Pair2),
+	}
+
 	param := getArbitrageQueryParam(big.NewInt(0), 0, 10000)
 	rois, err := getRois(s, triangular, param, ctx)
 	if err != nil {
@@ -249,9 +273,9 @@ func pairWorker(s *APIImpl, results chan<- interface{}, triangular *pairtypes.IT
 	}
 
 	ROI := &ROI{
-		TriangularEntity: *triangular,
-		CallData:         calldata,
-		Profit:           *rois[13],
+		Triangle: *triangle,
+		CallData: calldata,
+		Profit:   *rois[13],
 	}
 
 	results <- ROI
@@ -271,9 +295,9 @@ func getWei(roi *big.Int, bitSize int) *Wei {
 }
 
 type ROI struct {
-	TriangularEntity pairtypes.ITriangularArbitrageTriangular
-	CallData         string
-	Profit           big.Int
+	Triangle pairtypes.Triangle
+	CallData string
+	Profit   big.Int
 }
 
 func getRois(s *APIImpl, triangular *pairtypes.ITriangularArbitrageTriangular, param *ArbitrageQueryParam, ctx context.Context) ([]*big.Int, error) {
@@ -529,20 +553,10 @@ func (api *APIImpl) CallBatch() (string, error) {
 	var wg sync.WaitGroup
 	for _, triangle := range triangles {
 		wg.Add(1)
-		triangular := &pairtypes.ITriangularArbitrageTriangular{
-			Token0:  libcommon.HexToAddress(triangle.Token0),
-			Router0: libcommon.HexToAddress(triangle.Router0),
-			Pair0:   libcommon.HexToAddress(triangle.Pair0),
-			Token1:  libcommon.HexToAddress(triangle.Token1),
-			Router1: libcommon.HexToAddress(triangle.Router1),
-			Pair1:   libcommon.HexToAddress(triangle.Pair1),
-			Token2:  libcommon.HexToAddress(triangle.Token2),
-			Router2: libcommon.HexToAddress(triangle.Router2),
-			Pair2:   libcommon.HexToAddress(triangle.Pair2),
-		}
+		copyTriangle := triangle
 		gopool.Submit(func() {
 			defer wg.Done()
-			workerTest(api, results, triangular)
+			workerTest(api, results, &copyTriangle)
 		})
 	}
 	wg.Wait()
@@ -577,19 +591,19 @@ func (api *APIImpl) CallBatch() (string, error) {
 
 		// 将排序后的rois去重过滤，保证每个pair只能出现一次，重复时将Profit较小的ROI都删除，只保留Profit最大的ROI
 		// 去重，保证 Pair0, Pair1, Pair2 中的值只出现一次
-		uniquePairs := make(map[libcommon.Address]bool)
+		uniquePairs := make(map[string]bool)
 		var filteredROIs []ROI
 		for _, roi := range rois {
-			if uniquePairs[roi.TriangularEntity.Pair0] || uniquePairs[roi.TriangularEntity.Pair1] || uniquePairs[roi.TriangularEntity.Pair2] {
+			if uniquePairs[roi.Triangle.Pair0] || uniquePairs[roi.Triangle.Pair1] || uniquePairs[roi.Triangle.Pair2] {
 				// 如果任何一个 pair 已经出现过，跳过该结构体（删除）
 				continue
 			}
 
 			// 如果不存在，则将该结构体加入结果集，并标记 pairs 为已出现
 			filteredROIs = append(filteredROIs, roi)
-			uniquePairs[roi.TriangularEntity.Pair0] = true
-			uniquePairs[roi.TriangularEntity.Pair1] = true
-			uniquePairs[roi.TriangularEntity.Pair2] = true
+			uniquePairs[roi.Triangle.Pair0] = true
+			uniquePairs[roi.Triangle.Pair1] = true
+			uniquePairs[roi.Triangle.Pair2] = true
 		}
 		api.logger.Info("排序去重获rois成功", "filteredROIs", filteredROIs)
 
@@ -639,20 +653,10 @@ func (api *APIImpl) PairCallBatch(triangles []pairtypes.Triangle) {
 	var wg sync.WaitGroup
 	for _, triangle := range triangles {
 		wg.Add(1)
-		triangular := &pairtypes.ITriangularArbitrageTriangular{
-			Token0:  libcommon.HexToAddress(triangle.Token0),
-			Router0: libcommon.HexToAddress(triangle.Router0),
-			Pair0:   libcommon.HexToAddress(triangle.Pair0),
-			Token1:  libcommon.HexToAddress(triangle.Token1),
-			Router1: libcommon.HexToAddress(triangle.Router1),
-			Pair1:   libcommon.HexToAddress(triangle.Pair1),
-			Token2:  libcommon.HexToAddress(triangle.Token2),
-			Router2: libcommon.HexToAddress(triangle.Router2),
-			Pair2:   libcommon.HexToAddress(triangle.Pair2),
-		}
+		copyTriangle := triangle
 		gopool.Submit(func() {
 			defer wg.Done()
-			pairWorker(api, results, triangular)
+			pairWorker(api, results, &copyTriangle)
 		})
 	}
 	wg.Wait()
@@ -687,21 +691,23 @@ func (api *APIImpl) PairCallBatch(triangles []pairtypes.Triangle) {
 		})
 		api.logger.Info("降序排序rois成功", "个数", roiLen, "rois", rois)
 
+		// 判断rois中是否存在Token，Router，Pair相同的roi，如果存在，打印他们的id
+
 		// 将排序后的rois去重过滤，保证每个pair只能出现一次，重复时将Profit较小的ROI都删除，只保留Profit最大的ROI
 		// 去重，保证 Pair0, Pair1, Pair2 中的值只出现一次
-		uniquePairs := make(map[libcommon.Address]bool)
+		uniquePairs := make(map[string]bool)
 		var filteredROIs []ROI
 		for _, roi := range rois {
-			if uniquePairs[roi.TriangularEntity.Pair0] || uniquePairs[roi.TriangularEntity.Pair1] || uniquePairs[roi.TriangularEntity.Pair2] {
+			if uniquePairs[roi.Triangle.Pair0] || uniquePairs[roi.Triangle.Pair1] || uniquePairs[roi.Triangle.Pair2] {
 				// 如果任何一个 pair 已经出现过，跳过该结构体（删除）
 				continue
 			}
 
 			// 如果不存在，则将该结构体加入结果集，并标记 pairs 为已出现
 			filteredROIs = append(filteredROIs, roi)
-			uniquePairs[roi.TriangularEntity.Pair0] = true
-			uniquePairs[roi.TriangularEntity.Pair1] = true
-			uniquePairs[roi.TriangularEntity.Pair2] = true
+			uniquePairs[roi.Triangle.Pair0] = true
+			uniquePairs[roi.Triangle.Pair1] = true
+			uniquePairs[roi.Triangle.Pair2] = true
 		}
 		api.logger.Info("排序去重获rois成功", "个数", len(filteredROIs), "filteredROIs", filteredROIs)
 
