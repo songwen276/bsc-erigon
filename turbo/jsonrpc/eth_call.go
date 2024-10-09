@@ -506,7 +506,7 @@ func (api *APIImpl) CallBatch() (string, error) {
 	// 读取任务测试数据
 	api.logger.Info("开始执行CallBatch")
 	var triangulars []*pairtypes.ITriangularArbitrageTriangular
-	triangular := &pairtypes.ITriangularArbitrageTriangular{
+	oriTriangular := &pairtypes.ITriangularArbitrageTriangular{
 		Token0:  libcommon.HexToAddress("0x0bc89aa98Ad94E6798Ec822d0814d934cCD0c0cE"),
 		Router0: libcommon.HexToAddress("0x10ED43C718714eb63d5aA57B78B54704E256024E"),
 		Pair0:   libcommon.HexToAddress("0x51C5251BF281C6d0eF8ced7a1741FdB68D130ac2"),
@@ -517,7 +517,7 @@ func (api *APIImpl) CallBatch() (string, error) {
 		Router2: libcommon.HexToAddress("0x10ED43C718714eb63d5aA57B78B54704E256024E"),
 		Pair2:   libcommon.HexToAddress("0xEE90C67C9dD5dE862F4eabFDd53007a2D95Df5c6"),
 	}
-	triangulars = append(triangulars, triangular)
+	triangulars = append(triangulars, oriTriangular)
 
 	// 初始化构造当前区块公共数据
 	start := time.Now()
@@ -527,9 +527,10 @@ func (api *APIImpl) CallBatch() (string, error) {
 	var wg sync.WaitGroup
 	for _, triangular := range triangulars {
 		wg.Add(1)
+		currentTriangular := triangular
 		gopool.Submit(func() {
 			defer wg.Done()
-			workerTest(api, results, triangular)
+			workerTest(api, results, currentTriangular)
 		})
 	}
 	wg.Wait()
@@ -626,9 +627,10 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 	var wg sync.WaitGroup
 	for _, triangular := range triangulars {
 		wg.Add(1)
+		currentTriangular := triangular
 		gopool.Submit(func() {
 			defer wg.Done()
-			pairWorker(api, results, triangular)
+			pairWorker(api, results, currentTriangular)
 		})
 	}
 	wg.Wait()
