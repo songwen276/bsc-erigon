@@ -449,9 +449,10 @@ func GetEthCallData() ([]ethapi2.CallArgs, error) {
 // 	var wg sync.WaitGroup
 // 	for _, job := range datas {
 // 		wg.Add(1)
+// 		copyJob := job
 // 		go func() {
 // 			defer wg.Done()
-// 			worker(api, results, job)
+// 			worker(api, results, copyJob)
 // 		}()
 // 	}
 // 	wg.Wait()
@@ -527,10 +528,10 @@ func (api *APIImpl) CallBatch() (string, error) {
 	var wg sync.WaitGroup
 	for _, triangular := range triangulars {
 		wg.Add(1)
-		currentTriangular := triangular
+		currentTriangular := *triangular
 		gopool.Submit(func() {
 			defer wg.Done()
-			workerTest(api, results, currentTriangular)
+			workerTest(api, results, &currentTriangular)
 		})
 	}
 	wg.Wait()
@@ -627,10 +628,10 @@ func (api *APIImpl) PairCallBatch(triangulars []*pairtypes.ITriangularArbitrageT
 	var wg sync.WaitGroup
 	for _, triangular := range triangulars {
 		wg.Add(1)
-		currentTriangular := triangular
+		currentTriangular := *triangular
 		gopool.Submit(func() {
 			defer wg.Done()
-			pairWorker(api, results, currentTriangular)
+			pairWorker(api, results, &currentTriangular)
 		})
 	}
 	wg.Wait()
