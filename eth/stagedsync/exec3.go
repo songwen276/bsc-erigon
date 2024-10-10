@@ -1119,8 +1119,8 @@ Loop:
 				if triangle, exists := pairCache.GetTriangle(triangleId); exists {
 					triangles = append(triangles, triangle)
 					filterMap[triangleId] = true
-					if triangleId != strconv.FormatInt(triangle.ID, 10) {
-						logger.Info("triangleId和triangle.ID比较", "不相同")
+					if id, _ := strconv.ParseInt(triangleId, 10, 64); id != triangle.ID {
+						logger.Info("triangleId和triangle.ID比较不相同", "triangleId", id, "triangle.ID", triangle.ID)
 					}
 				}
 			}
