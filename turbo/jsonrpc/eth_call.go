@@ -65,7 +65,7 @@ import (
 
 var latestNumOrHash = rpc.BlockNumberOrHashWithNumber(rpc.LatestBlockNumber)
 
-func workerTest(s *APIImpl, results chan<- interface{}, triangle *pairtypes.Triangle) {
+func workerTest(s *APIImpl, results chan<- interface{}, triangle pairtypes.Triangle) {
 	// 设置上下文，用于控制每个任务方法执行超时时间，构造triangular
 	ctx := context.Background()
 	triangular := &pairtypes.ITriangularArbitrageTriangular{
@@ -168,7 +168,7 @@ func workerTest(s *APIImpl, results chan<- interface{}, triangle *pairtypes.Tria
 	log.Info("编码calldata成功", "calldata", calldata)
 
 	ROI := &ROI{
-		Triangle: *triangle,
+		Triangle: triangle,
 		CallData: calldata,
 		Profit:   *rois[13],
 	}
@@ -177,7 +177,7 @@ func workerTest(s *APIImpl, results chan<- interface{}, triangle *pairtypes.Tria
 	return
 }
 
-func pairWorker(s *APIImpl, results chan<- interface{}, triangle *pairtypes.Triangle) {
+func pairWorker(s *APIImpl, results chan<- interface{}, triangle pairtypes.Triangle) {
 	// 设置上下文，用于控制每个任务方法执行超时时间，构造triangular
 	ctx := context.Background()
 	triangular := &pairtypes.ITriangularArbitrageTriangular{
@@ -273,7 +273,7 @@ func pairWorker(s *APIImpl, results chan<- interface{}, triangle *pairtypes.Tria
 	}
 
 	ROI := &ROI{
-		Triangle: *triangle,
+		Triangle: triangle,
 		CallData: calldata,
 		Profit:   *rois[13],
 	}
@@ -457,14 +457,14 @@ func GetEthCallData() ([]ethapi2.CallArgs, error) {
 func SubmitTestCall(wg *sync.WaitGroup, api *APIImpl, results chan interface{}, triangle pairtypes.Triangle) {
 	gopool.Submit(func() {
 		defer wg.Done()
-		workerTest(api, results, &triangle)
+		workerTest(api, results, triangle)
 	})
 }
 
 func SubmitCall(wg *sync.WaitGroup, api *APIImpl, results chan interface{}, triangle pairtypes.Triangle) {
 	gopool.Submit(func() {
 		defer wg.Done()
-		pairWorker(api, results, &triangle)
+		pairWorker(api, results, triangle)
 	})
 }
 
