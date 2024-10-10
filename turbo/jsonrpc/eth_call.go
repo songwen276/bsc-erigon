@@ -454,6 +454,20 @@ func GetEthCallData() ([]ethapi2.CallArgs, error) {
 	return datas, nil
 }
 
+func SubmitTestCall(wg *sync.WaitGroup, api *APIImpl, results chan interface{}, triangle pairtypes.Triangle) {
+	gopool.Submit(func() {
+		defer wg.Done()
+		workerTest(api, results, &triangle)
+	})
+}
+
+func SubmitCall(wg *sync.WaitGroup, api *APIImpl, results chan interface{}, triangle pairtypes.Triangle) {
+	gopool.Submit(func() {
+		defer wg.Done()
+		pairWorker(api, results, &triangle)
+	})
+}
+
 // // CallBatch batch executes Call
 // func (api *APIImpl) CallBatch() (string, error) {
 // 	// 读取任务测试数据
@@ -553,11 +567,7 @@ func (api *APIImpl) CallBatch() (string, error) {
 	var wg sync.WaitGroup
 	for _, triangle := range triangles {
 		wg.Add(1)
-		copyTriangle := triangle
-		gopool.Submit(func() {
-			defer wg.Done()
-			workerTest(api, results, &copyTriangle)
-		})
+		SubmitTestCall(&wg, api, results, triangle)
 	}
 	wg.Wait()
 	close(results)
@@ -653,11 +663,7 @@ func (api *APIImpl) PairCallBatch(triangles []pairtypes.Triangle) {
 	var wg sync.WaitGroup
 	for _, triangle := range triangles {
 		wg.Add(1)
-		copyTriangle := triangle
-		gopool.Submit(func() {
-			defer wg.Done()
-			pairWorker(api, results, &copyTriangle)
-		})
+		SubmitCall(&wg, api, results, triangle)
 	}
 	wg.Wait()
 	close(results)
